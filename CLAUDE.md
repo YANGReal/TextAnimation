@@ -77,3 +77,39 @@ TextUpdateAnimationDemo/
 #### 当前代码状态
 - 所有场景完美运行（1-12月正常切换、9→10、12→1、跨年）
 - 动画流畅无跳动，快速点击不乱
+
+---
+
+## 2026-04-03 第三次更新
+
+### 已完成：封装为 DateSwitchAnimationLabel
+
+#### 新文件结构
+
+```
+TextUpdateAnimationDemo/
+├── AnimationDirection.swift          # 顶层枚举（不变）
+├── CharacterView.swift               # 改造：font/textColor/height 参数化，宽度动态计算
+├── DateSwitchAnimationLabel.swift    # 新：封装好的可复用 UIView（替换 TimeTextView）
+└── ViewController.swift              # 使用 DateSwitchAnimationLabel
+```
+
+#### 公开接口
+
+```swift
+let label = DateSwitchAnimationLabel()
+label.font = .systemFont(ofSize: 32, weight: .medium)
+label.textColor = .systemBlue
+label.dateFormat = .dashYearMonth       // .chineseYearMonth 或 .dashYearMonth
+label.configure(with: "2026-4")         // 初始化（无动画）
+label.update(to: "2026-10", direction: .up)  // 带动画切换
+```
+
+#### 关键技术点
+- diff 算法改为**公共前缀/后缀**泛化算法，不再硬编码"前5位"，支持任意格式
+- 字符宽度改用 `UILabel.sizeThatFits` 动态测量，比 `NSString.size` 更准确
+- `CharacterView` 的 font/textColor/height 全部由外部注入
+
+### 待确认问题
+
+1. **"年"字截断** - `NSString.size` + 4pt padding 仍截断，已改为 `UILabel.sizeThatFits` 方案，明天确认是否修复
