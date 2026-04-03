@@ -44,3 +44,36 @@
 - 基础功能完整，动画方向正确
 - 长度变化时体验有待优化
 - 明天继续优化9→10、12→1等临界情况的动画效果
+
+---
+
+## 2026-04-03 第二次更新
+
+### 已完成：方案3 - 手动 Frame 管理替换 UICollectionView
+
+**彻底解决了长度变化时"月"字跳动的问题。**
+
+#### 新文件结构
+
+```
+TextUpdateAnimationDemo/
+├── AnimationDirection.swift   # 顶层枚举（.up / .down）
+├── CharacterView.swift        # 单字符 UIView，持久生命周期
+├── TimeTextView.swift         # 字符容器，管理 diff + 动画编排
+└── ViewController.swift       # 精简，只负责按钮和日期计算
+```
+
+#### 核心思路
+
+- 放弃 UICollectionView，每个字符是一个持久 `CharacterView` 实例
+- `TimeTextView.computeDiff` 按"年份前缀5位 + 月份段 + 月字后缀"三段语义 diff
+- 每种变化类型对应不同动画：
+  - `unchanged`：x 坐标位移动画（"月"字平移）
+  - `changed`：原地垂直滚动 + x 位移并行
+  - `inserted`：`animateIn` 从屏幕外滑入
+  - `removed`：`animateOut` 滑出后 removeFromSuperview
+- 快速点击用 `pendingUpdate` 队列排队处理
+
+#### 当前代码状态
+- 所有场景完美运行（1-12月正常切换、9→10、12→1、跨年）
+- 动画流畅无跳动，快速点击不乱
