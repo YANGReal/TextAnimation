@@ -55,6 +55,11 @@ class ViewController: UIViewController {
         setupUI()
         dateLabel.configure(with: currentText)
         currentDateLabel.text = "当前显示: \(currentText)"
+
+        // DEBUG: 自动触发切换，方便截图分析
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.nextMonthTapped()
+        }
     }
 
     // MARK: - Setup
@@ -68,10 +73,9 @@ class ViewController: UIViewController {
         view.addSubview(currentDateLabel)
 
         NSLayoutConstraint.activate([
-            // dateLabel 宽度固定为最大字符宽度之和（约 280），高度由 intrinsicContentSize 决定
+            // dateLabel 宽度由 intrinsicContentSize 驱动，高度固定
             dateLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             dateLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -50),
-            dateLabel.widthAnchor.constraint(equalToConstant: 280),
             dateLabel.heightAnchor.constraint(equalToConstant: dateLabel.font.lineHeight * 1.2),
 
             prevButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40),

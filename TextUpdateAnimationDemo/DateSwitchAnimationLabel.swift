@@ -96,6 +96,11 @@ class DateSwitchAnimationLabel: UIView {
         let newXPositions = computeXPositions(for: newChars)
         let diff = computeDiff(from: oldChars, to: newChars)
 
+        print("[update] '\(oldText)' → '\(newText)'")
+        for (i, char) in newChars.enumerated() {
+            print("  char='\(char)' x=\(newXPositions[i]) width=\(characterWidth(for: char))")
+        }
+
         let group = DispatchGroup()
 
         for change in diff {
@@ -168,10 +173,18 @@ class DateSwitchAnimationLabel: UIView {
     }
 
     private func characterWidth(for character: Character) -> CGFloat {
-        let label = UILabel()
-        label.font = font
-        label.text = String(character)
-        return ceil(label.sizeThatFits(CGSize(width: CGFloat.greatestFiniteMagnitude, height: characterHeight)).width)
+        let scalar = character.unicodeScalars.first!.value
+        let isCJK = (scalar >= 0x4E00 && scalar <= 0x9FFF)
+                 || (scalar >= 0x3000 && scalar <= 0x303F)
+        if isCJK {
+            return ceil(font.pointSize)
+        }
+        let str = String(character)
+        let attributes: [NSAttributedString.Key: Any] = [.font: font]
+        let attrStr = NSAttributedString(string: str, attributes: attributes)
+        let line = CTLineCreateWithAttributedString(attrStr)
+        let width = CTLineGetTypographicBounds(line, nil, nil, nil)
+        return ceil(CGFloat(width))
     }
 
     private func computeXPositions(for chars: [Character]) -> [CGFloat] {

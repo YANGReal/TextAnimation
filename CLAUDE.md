@@ -110,6 +110,17 @@ label.update(to: "2026-10", direction: .up)  // 带动画切换
 - 字符宽度改用 `UILabel.sizeThatFits` 动态测量，比 `NSString.size` 更准确
 - `CharacterView` 的 font/textColor/height 全部由外部注入
 
-### 待确认问题
+---
 
-1. **"年"字截断** - `NSString.size` + 4pt padding 仍截断，已改为 `UILabel.sizeThatFits` 方案，明天确认是否修复
+## 2026-04-07 第四次更新
+
+### 已修复："年"字截断问题
+
+#### 问题根因
+`UILabel.sizeThatFits` 对中文字符有时返回值比实际渲染宽度小，导致"年"字右侧被 `containerView`（`clipsToBounds = true`）裁切。
+
+另外 `ViewController` 中 `widthAnchor.constraint(equalToConstant: 280)` 写死宽度，当月份变为双位数（如10月）时整体内容宽度超出，字符被外层 `clipsToBounds` 截断。
+
+#### 修复方案
+1. **字符宽度测量** - 改用 `NSString.boundingRect` + `ceil` + `+2pt` 安全边距（`CharacterView.characterWidth` 和 `DateSwitchAnimationLabel.characterWidth(for:)` 两处同步修改）
+2. **去掉固定宽度约束** - `ViewController` 中删除 `widthAnchor.constraint(equalToConstant: 280)`，改由 `intrinsicContentSize` 驱动宽度，随内容自适应
